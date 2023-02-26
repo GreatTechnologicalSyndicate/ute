@@ -22,7 +22,7 @@ def chat_check_handler(m):
                                                             'text', 'location', 'contact', 'sticker',
                                                             'new_chat_members'])
 def user_check_handler(m):
-    bot.send_message(log_channel, 'Це повідомлення неможливе! НЕМОЖЛИВЕ БЛЯТЬ! ЯКЩО ЦЕ ПРИСЛАНО ВИРУБАЙТЕ БОТА НАХУЙ')
+    pass
 
 
 @bot.chat_join_request_handler()
@@ -118,21 +118,21 @@ def avocado_handler(m):
                      f'{m.text}✅ | `{user["_id"]}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
-@bot.message_handler(func=citizen_lambda)
-def citizen_handler(m):
+@bot.message_handler(func=member_lambda)
+def member_handler(m):
     user = m.reply_to_message.from_user
     user = users.process_user(user)
     if user['status'] == 'enemy':
         bot.reply_to(m, 'Не обязан.')
         return
-    users.set_status(user['_id'], 'citizen')
+    users.set_status(user['_id'], 'member')
     bot.send_message(log_channel,
                      f'{m.text}✅ | `{user["_id"]}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
 
-@bot.message_handler(func=lambda m: citizens_lambda(m) and shana_lamda(m) )
+@bot.message_handler(func=lambda m: members_lambda(m) and shana_lamda(m) )
 def shana_handler(m):
     if m.from_user.id == m.reply_to_message.from_user.id:
         bot.respond_to(m, 'Choose a human please (not yourself)')
@@ -153,7 +153,7 @@ def shana_handler(m):
 
     bot.respond_to(m, f'🆙 {user["name"]} +1 rep')
     
-@bot.message_handler(func=lambda m: citizens_lambda(m) and ganyba_lamda(m) )
+@bot.message_handler(func=lambda m: members_lambda(m) and ganyba_lamda(m) )
 def ganyba_handler(m):
     if m.from_user.id == m.reply_to_message.from_user.id:
         bot.respond_to(m, 'Choose a human please (not yourself)')
@@ -224,11 +224,11 @@ def map_handler(m):
             tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 
-@bot.message_handler(commands=['citizens'], func=owner_lambda)
+@bot.message_handler(commands=['members'], func=owner_lambda)
 def map_handler(m):
     tts = '🛂Список граждан:\n'
     for user in users.get_users():
-        if user['status'] == 'citizen' or user['status'] == 'owner':
+        if user['status'] == 'member' or user['status'] == 'owner':
             tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 

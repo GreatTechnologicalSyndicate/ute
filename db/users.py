@@ -17,7 +17,7 @@ class Users:
         return [user for user in self.db.find({'status': 'owner'})]
 
     def get_citizens(self):
-        return [user for user in self.db.find({'status': 'citizens'})]
+        return [user for user in self.db.find({'status': 'members'})]
 
     def ban(self, user_id):
         self.set_status(user_id, 'banned')

@@ -29,7 +29,7 @@ def unlocalban_lambda(m):
 def unwideban_lambda(m):
     return owner_lambda(m) and m.text == '🕊🏛' and reply_lambda(m)
 
-def citizen_lambda(m):
+def member_lambda(m):
     return owner_lambda(m) and m.text == '🛂🏛' and reply_lambda(m)
 
 def localban_lambda(m):
@@ -41,12 +41,12 @@ def shana_lamda(m):
 def ganyba_lamda(m):
     return m.text.lower() == 'ганьба' or m.text.lower() == 'на гіляку' and reply_lambda(m)
 
-def citizens_lambda(m):
+def members_lambda(m):
     users.process_user(m.from_user)
     user = bot.get_chat_member(m.chat.id, m.from_user.id)
     if owner_lambda(m):
         return True
-    if user.status == 'citizen':
+    if user.status == 'member':
         return True
     if user.status == 'admin':
         return True

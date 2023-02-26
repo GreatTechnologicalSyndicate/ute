@@ -20,10 +20,6 @@ db = Database(mongo_url)
 users = Users(db)
 chats = Chats(db)
 
-# ndb = Database(new_mongo_url)
-# nusers = Users(ndb)
-# nchats = Chats(ndb)
-
 self_id = bot.get_me().id
 
 for owner in owners:
