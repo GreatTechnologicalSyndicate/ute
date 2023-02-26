@@ -1,0 +1,6 @@
+venv
+__pycache__
+config.py
+test.py
+supervise
+event
