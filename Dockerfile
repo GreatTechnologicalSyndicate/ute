@@ -1,14 +1,10 @@
-FROM mongo:latest
+FROM python:latest
 
-#python version
-FROM python:3.9
+WORKDIR /app
 
-#create folder
-RUN mkdir -p /opt/imf
-RUN mkdir -p /opt/imf/data
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
 
-#Install dependencies
-COPY requirements.txt /opt/imf
-WORKDIR /opt/imf
-RUN pip3 install --no-cache-dir -r requirements.txt
+COPY . .
 
+CMD [ "python3", "main.py" ]

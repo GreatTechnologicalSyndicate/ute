@@ -68,8 +68,7 @@ def wideban_handler(m):
             chat = chats.get_chat(chat_id)
             bot.send_message(log_channel, f'🔨❔ | {chat["title"]} | {chat["_id"]}')
     bot.send_message(log_channel, f'{m.text}✅ | `{user["_id"]}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
-                     parse_mode='Markdown')
-
+                     parse_mode='Markdown')    
 
 @bot.message_handler(func=unlocalban_lambda)
 def localban_handler(m):
@@ -123,6 +122,9 @@ def avocado_handler(m):
 def citizen_handler(m):
     user = m.reply_to_message.from_user
     user = users.process_user(user)
+    if user['status'] == 'enemy':
+        bot.reply_to(m, 'Не обязан.')
+        return
     users.set_status(user['_id'], 'citizen')
     bot.send_message(log_channel,
                      f'{m.text}✅ | `{user["_id"]}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
@@ -222,7 +224,7 @@ def map_handler(m):
             tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 
-@bot.message_handler(commands=['citizens'])
+@bot.message_handler(commands=['citizens'], func=owner_lambda)
 def map_handler(m):
     tts = '🛂Список граждан:\n'
     for user in users.get_users():
