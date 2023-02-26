@@ -2,17 +2,16 @@ version: '3.3'
 
 services:
  backend:
-  container_name: PYTHON-API-BACKEND
+  container_name: ute-bot
   build: .
-  command: python3 main.py
-  volumes:
-    - .:/opt/imf
-  links:
-    - db
+  networks:
+    - ute
+
  db:
   image: mongo:latest
-  container_name: MONGO-API-BACKEND
-  ports:
-    - "27017:27017"
-  volumes:
-    - .:/opt/imf/data
+  container_name: ute-db
+  networks:
+    - ute
+
+networks:
+ ute:
