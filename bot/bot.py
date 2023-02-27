@@ -7,7 +7,7 @@ from bot.lambdas import *
 @bot.message_handler(func=chat_check_lambda)
 def chat_check_handler(m):
     bot.leave_chat(m.chat.id)
-    bot.send_message(log_channel, f'🦋❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+    bot.send_message(log_channel, f'{allow_chat_command}❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
