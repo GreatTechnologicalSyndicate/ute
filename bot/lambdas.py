@@ -1,4 +1,4 @@
-from .startup import bot, users, chats, self_id
+from startup import bot, users, chats, self_id
 from config import *
 
 

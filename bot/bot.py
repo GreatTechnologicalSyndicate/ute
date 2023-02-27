@@ -243,5 +243,3 @@ def start_handler(m):
     bot.respond_to(m, 'Greetings!')
 
 
-bot.send_message(log_channel, '♻️✅')
-bot.infinity_polling()
