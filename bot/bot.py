@@ -1,7 +1,7 @@
 from datetime import datetime
 from threading import Thread
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-from bot.lambdas import *
+from .lambdas import *
 
 
 @bot.message_handler(func=chat_check_lambda)
@@ -244,4 +244,4 @@ def start_handler(m):
 
 
 bot.send_message(log_channel, '♻️✅')
-Thread(target=bot.infinity_polling).start()
+bot.infinity_polling()
