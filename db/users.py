@@ -2,6 +2,13 @@ class Users:
     def __init__(self, db):
         self.db = db.users
         self.database = db
+        self.initialize()
+
+    def initialize(self):
+        sample = self.db.find_one({})
+        for line, value in self.form_user_doc(0, "0").items():
+            if line not in sample:
+                self.db.update_many({}, {"$set": {line: value}})
 
     def get_users(self):
         return self.db.find({})

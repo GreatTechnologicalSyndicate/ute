@@ -4,6 +4,13 @@ class Chats:
     def __init__(self, db):
         self.db = db.chats
         self.database = db
+        self.initialize()
+
+    def initialize(self):
+        sample = self.db.find_one({})
+        for line, value in self.form_chat_doc(0, "0").items():
+            if line not in sample:
+                self.db.update_many({}, {"$set": {line: value}})
 
     def get_chats(self):
         return self.db.find({})
