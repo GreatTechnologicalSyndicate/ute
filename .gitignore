@@ -4,3 +4,4 @@ config.py
 test.py
 supervise
 event
+.idea

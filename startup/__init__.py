@@ -4,6 +4,7 @@ from db.database import Database
 from db.chats import Chats
 from db.users import Users
 
+
 class ExtendedBot(TeleBot):
     def form_html_userlink(self, name, user_id):
         return f'<a href="tg://user?id={user_id}">{name}</a>'
@@ -14,6 +15,7 @@ class ExtendedBot(TeleBot):
 
     def respond_to(self, message, text, **kwargs):
         return self.send_message(message.chat.id, text, **kwargs)
+
 
 bot = ExtendedBot(telegram_token)
 db = Database(mongo_url)

@@ -40,9 +40,9 @@ class Users:
         self.db.update_one({'_id': user_id}, {'$set': {'awards': awards}})
 
     
-
     def set_reputation_cooldown(self, user_id: int, date: int):
         self.db.update_one({'_id': user_id}, {'$set': {'reputation_cooldown': date}})
+
     def set_name(self, user_id: int, name: str):
         self.db.update_one({'_id': user_id}, {'$set': {'name': name}})
     
