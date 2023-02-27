@@ -1,7 +1,7 @@
 from datetime import datetime
 from threading import Thread
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-from .lambdas import *
+from bot.lambdas import *
 
 
 @bot.message_handler(func=chat_check_lambda)
