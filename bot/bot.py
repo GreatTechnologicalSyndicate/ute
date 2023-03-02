@@ -95,7 +95,7 @@ def promote_handler(m):
 def member_handler(m):
     user = m.reply_to_message.from_user
     user = users.process_user(user)
-    users.set_status(user['_id'], 'member')
+    users.set_status(user['_id'], members_codename)
     bot.send_message(log_channel,
                      f'{m.text}✅ | `{user["_id"]}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
@@ -199,17 +199,17 @@ def map_handler(m):
     tts = '🔂📃:\n'
     i = 1
     for user in users.get_top_reputation():
-        emoji = {'member': '🛂', 'owner': '👩🏻‍💼', 'guest': '👤', 'banned': '🚱'}.get(user['status'], '👤')
+        emoji = {members_codename: '🛂', 'owner': '👩🏻‍💼', 'guest': '👤', 'banned': '🚱'}.get(user['status'], '👤')
         tts += f'{i}.{emoji}{user["name"]} - {user["reputation"]}\n'
         i+=1
     bot.respond_to(m, tts, parse_mode='HTML')
 
 
-@bot.message_handler(commands=['members'], func=owner_lambda)
+@bot.message_handler(commands=[members_codename+'s'], func=owner_lambda)
 def map_handler(m):
     tts = '🛂📃:\n'
     for user in users.get_users():
-        if user['status'] == 'member' or user['status'] == 'owner':
+        if user['status'] == members_codename or user['status'] == 'owner':
             tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 

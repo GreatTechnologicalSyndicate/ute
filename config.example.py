@@ -16,5 +16,7 @@ global_ban_command = '🔨🏛'
 global_unban_command = '🕊🏛'
 grant_membership_command = '🛂🏛'
 
+members_codename = 'member'
+
 shana_commands = ['шана', 'дяка', 'база', '+']
 ganyba_commands = ['крінж', 'ганьба', 'на гілляку', '-']

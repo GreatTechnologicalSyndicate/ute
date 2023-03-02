@@ -45,7 +45,7 @@ def members_lambda(m):
     user = bot.get_chat_member(m.chat.id, m.from_user.id)
     if owner_lambda(m):
         return True
-    if user.status == 'member':
+    if user.status == members_codename:
         return True
     if user.status == 'admin':
         return True
