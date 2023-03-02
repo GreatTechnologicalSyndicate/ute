@@ -22,12 +22,12 @@ def user_check_handler(m):
 def chat_join_request(r):
     kb = InlineKeyboardMarkup()
 
-    tts = '📬Запрос на вступление в чат!\n'
-    tts += f'🗺Чат: {r.chat.title}\n'
-    tts += f'👤Пользователь: {bot.form_html_userlink(r.from_user.first_name, r.from_user.id)}'
+    tts = '📬💬!\n'
+    tts += f'🗺💬: {r.chat.title}\n'
+    tts += f'👤: {bot.form_html_userlink(r.from_user.first_name, r.from_user.id)}'
 
-    kb.add(InlineKeyboardButton('✅Принять', callback_data=f'ja {r.chat.id} {r.from_user.id}'))
-    kb.add(InlineKeyboardButton('❌Отклонить', callback_data=f'jd {r.chat.id} {r.from_user.id}'))
+    kb.add(InlineKeyboardButton('✅', callback_data=f'ja {r.chat.id} {r.from_user.id}'))
+    kb.add(InlineKeyboardButton('❌', callback_data=f'jd {r.chat.id} {r.from_user.id}'))
 
     bot.send_message(log_channel, tts, parse_mode='HTML', reply_markup=kb)
 
@@ -153,6 +153,7 @@ def achievement_handler(m):
     awards = user['awards']
     awards.append(name)
     users.set_awards(user['_id'], awards)
+    bot.reply_to(m, '🏆✅')
 
 
 @bot.message_handler(commands=['globalban'], func=lambda m: owner_lambda(m) and arguments_lambda(m))
@@ -174,7 +175,7 @@ def globalban_handler(m):
 
 @bot.message_handler(commands=['map'], func=owner_lambda)
 def map_handler(m):
-    tts = '🗺Карта чатов:\n'
+    tts = '🗺📃:\n'
     for chat_id in chats.chats:
         chat = chats.get_chat(chat_id)
         try:
@@ -187,16 +188,26 @@ def map_handler(m):
 
 @bot.message_handler(commands=['banlist'], func=owner_lambda)
 def map_handler(m):
-    tts = '🔨Список забубленных челов:\n'
+    tts = '🔨📃:\n'
     for user in users.get_users():
         if user['status'] == 'banned':
             tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 
+@bot.message_handler(commands=['rep'], func=members_lambda)
+def map_handler(m):
+    tts = '🔂📃:\n'
+    i = 1
+    for user in users.get_top_reputation():
+        emoji = {'member': '🛂', 'owner': '👩🏻‍💼', 'guest': '👤', 'banned': '🚱'}.get(user['status'], '👤')
+        tts += f'{i}.{emoji}{user["name"]} - {user["reputation"]}\n'
+        i+=1
+    bot.respond_to(m, tts, parse_mode='HTML')
+
 
 @bot.message_handler(commands=['members'], func=owner_lambda)
 def map_handler(m):
-    tts = '🛂Список граждан:\n'
+    tts = '🛂📃:\n'
     for user in users.get_users():
         if user['status'] == 'member' or user['status'] == 'owner':
             tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
@@ -209,11 +220,12 @@ def profile_handler(m):
     if m.reply_to_message:
         user = m.reply_to_message.from_user
     user = users.process_user(user)
-    tts = f'👤User profile {user["name"]}:\n'
+    tts = f'👤: {user["name"]}\n'
     tts += f'🆔: {user["_id"]}\n'
-    tts += f'📈Status: {user["status"]}\n'
-    tts += f'🐲Reputation: {user["reputation"]}\n'
-    tts += f'🏆Achievements: \n{", ".join(user["awards"])}'
+    tts += f'📈: {user["status"]}\n'
+    tts += f'🐲: {user["reputation"]}\n'
+    n = '\n'
+    tts += f'{n.join(user["awards"])}' if user["awards"] else ''
 
     bot.respond_to(m, tts)
 
@@ -240,6 +252,6 @@ def admins_handler(m):
 
 @bot.message_handler(commands=['start'])
 def start_handler(m):
-    bot.respond_to(m, 'Greetings!')
+    bot.respond_to(m, '👋')
 
 

@@ -1,3 +1,5 @@
+from pymongo import DESCENDING
+
 class Users:
     def __init__(self, db):
         self.db = db.users
@@ -12,6 +14,9 @@ class Users:
 
     def get_users(self):
         return self.db.find({})
+
+    def get_top_reputation(self):
+        return self.db.find({}).sort('reputation', DESCENDING).limit(10)
 
     @property
     def owners(self):
