@@ -1,12 +1,14 @@
 from datetime import datetime
-from threading import Thread
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-from bot.lambdas import *
+from .lambdas import *
 
 
 @bot.message_handler(func=chat_check_lambda)
 def chat_check_handler(m):
-    bot.leave_chat(m.chat.id)
+    try:
+        bot.leave_chat(m.chat.id)
+    except:
+        return
     bot.send_message(log_channel, f'{allow_chat_command}❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
@@ -48,98 +50,95 @@ def jc_handler(c):
 
 
 @bot.message_handler(func=unwideban_lambda)
-def wideban_handler(m):
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
+def unban_handler(m):
+    user = db.process_tg_user(m.reply_to_message.from_user)
     bot.respond_to(m, f'{m.text}✅')
-    users.unban(user["_id"])
-    for chat_id in chats.chats:
-        chats.unban(chat_id, user['_id'])
+    db.unban_user(user.id)
+    for chat_id in db.chats:
         try:
-            bot.unban_chat_member(chat_id, user['_id'])
+            bot.unban_chat_member(chat_id, user.id)
         except:
-            chat = chats.get_chat(chat_id)
-            bot.send_message(log_channel, f'🔨❔ | {chat["title"]} | {chat["_id"]}')
-    bot.send_message(log_channel, f'{m.text}✅ | `{user["_id"]}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+            chat = db.get_chat(chat_id)
+            bot.send_message(log_channel, f'🔨❔ | {chat.title} | {chat.id}')
+    bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
 @bot.message_handler(func=wideban_lambda)
-def wideban_handler(m):
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
+def ban_handler(m):
+    user = db.process_tg_user(m.reply_to_message.from_user)
     bot.respond_to(m, f'{m.text}✅')
-    users.ban(user["_id"])
-    for chat_id in chats.chats:
-        chats.ban(chat_id, user['_id'])
+    db.ban_user(user.id)
+    for chat_id in db.chats:
         try:
-            bot.ban_chat_member(chat_id, user['_id'])
+            bot.ban_chat_member(chat_id, user.id)
         except:
-            chat = chats.get_chat(chat_id)
-            bot.send_message(log_channel, f'🔨❔ | {chat["title"]} | {chat["_id"]}')
-    bot.send_message(log_channel, f'{m.text}✅ | `{user["_id"]}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+            chat = db.get_chat(chat_id)
+            bot.send_message(log_channel, f'🔨❔ | {chat.title} | {chat.id}')
+    bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
 @bot.message_handler(func=promote_lambda)
 def promote_handler(m):
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
-    users.set_status(user['_id'], 'owner')
+    user = db.process_tg_user(m.reply_to_message.from_user)
+    user.status = 'owner'
+    user.save()
     bot.send_message(log_channel,
-                     f'{m.text}✅ | `{user["_id"]}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                     f'{m.text}✅ | `{user.id}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
 @bot.message_handler(func=member_lambda)
 def member_handler(m):
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
-    users.set_status(user['_id'], members_codename)
+    user = db.process_tg_user(m.reply_to_message.from_user)
+    user.status = members_codename
+    user.save()
     bot.send_message(log_channel,
-                     f'{m.text}✅ | `{user["_id"]}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                     f'{m.text}✅ | `{user.id}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
 @bot.message_handler(func=lambda m: members_lambda(m) and shana_lamda(m))
 def shana_handler(m):
-    if m.from_user.id == m.reply_to_message.from_user.id:
+    if m.from_user.id == m.reply_to_message.from_user.id or m.reply_to_message.from_user.is_bot:
         bot.respond_to(m, 'Choose a human please (not yourself)')
         return
-    communicator = users.process_user(m.from_user)
+    communicator = db.process_tg_user(m.from_user)
     time_now = int(datetime.utcnow().timestamp())
     cooldown_time = 1000 * 60 * 60
-    time_differ = time_now - int(communicator['reputation_cooldown'])
+    time_differ = time_now - int(communicator.reputation_cooldown)
     if time_differ < cooldown_time:
         bot.respond_to(m, f"Wait for {datetime.fromtimestamp(cooldown_time - time_differ).strftime('%H:%M:%S')}")
         return
 
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
-    users.set_reputation(user['_id'], user['reputation'] + 1)
-    users.set_reputation_cooldown(communicator['_id'], time_now)
+    user = db.process_tg_user(m.reply_to_message.from_user)
+    user.reputation += 1
+    communicator.reputation_cooldown = time_now
+    user.save()
+    communicator.save()
 
-    bot.respond_to(m, f'🆙 {user["name"]} +1 rep')
+    bot.respond_to(m, f'🆙 {user.name} +1 rep')
 
 
 @bot.message_handler(func=lambda m: members_lambda(m) and ganyba_lamda(m))
 def ganyba_handler(m):
-    if m.from_user.id == m.reply_to_message.from_user.id:
+    if m.from_user.id == m.reply_to_message.from_user.id or m.reply_to_message.from_user.is_bot:
         bot.respond_to(m, 'Choose a human please (not yourself)')
         return
-    communicator = m.from_user
-    communicator = users.process_user(communicator)
+    communicator = db.process_tg_user(m.from_user)
     time_now = int(datetime.utcnow().timestamp())
     cooldown_time = 1000 * 60 * 60
-    time_differ = time_now - int(communicator['reputation_cooldown'])
+    time_differ = time_now - int(communicator.reputation_cooldown)
     if time_differ < cooldown_time:
         bot.respond_to(m, f"Wait for {datetime.fromtimestamp(cooldown_time - time_differ).strftime('%H:%M:%S')}")
         return
 
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
-    users.set_reputation(user['_id'], user['reputation'] - 1)
-    users.set_reputation_cooldown(communicator['_id'], time_now)
+    user = db.process_tg_user(m.reply_to_message.from_user)
+    user.reputation -= 1
+    communicator.reputation_cooldown = time_now
+    user.save()
+    communicator.save()
 
     bot.respond_to(m, f'🔽 {user["name"]} -1 rep')
 
@@ -147,70 +146,67 @@ def ganyba_handler(m):
 @bot.message_handler(commands=['achievement'],
                      func=lambda m: owner_lambda(m) and arguments_lambda(m) and reply_lambda(m))
 def achievement_handler(m):
-    name = m.text.split(' ', 1)[1]
-    user = m.reply_to_message.from_user
-    user = users.process_user(user)
-    awards = user['awards']
-    awards.append(name)
-    users.set_awards(user['_id'], awards)
+    award = m.text.split(' ', 1)[1]
+    user = db.process_tg_user(m.reply_to_message.from_user)
+    user.awards.append(award)
+    user.save()
     bot.reply_to(m, '🏆✅')
 
 
-@bot.message_handler(commands=['globalban'], func=lambda m: owner_lambda(m) and arguments_lambda(m))
-def globalban_handler(m):
+@bot.message_handler(commands=['global_ban'], func=lambda m: owner_lambda(m) and arguments_lambda(m))
+def global_ban_handler(m):
     user_id = int(m.text.split(' ', 1)[1])
-    user = users.get_user(user_id)
+    user = db.get_user(user_id)
     bot.respond_to(m, f'{m.text}✅')
-    users.ban(user["_id"])
-    for chat_id in chats.chats:
-        chats.ban(chat_id, user['_id'])
+    db.ban_user(user_id)
+    for chat_id in db.chats:
         try:
-            bot.ban_chat_member(chat_id, user['_id'])
+            bot.ban_chat_member(chat_id, user_id)
         except:
-            chat = chats.get_chat(chat_id)
-            bot.send_message(log_channel, f'🔨❔ | {chat["title"]} | {chat["_id"]}')
-    bot.send_message(log_channel, f'{m.text}✅ | `{user["_id"]}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+            chat = db.get_chat(chat_id)
+            bot.send_message(log_channel, f'🔨❔ | {chat.title} | {chat.id}')
+    bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['map'], func=owner_lambda)
 def map_handler(m):
     tts = '🗺📃:\n'
-    for chat_id in chats.chats:
-        chat = chats.get_chat(chat_id)
+    for chat_id in db.chats:
+        chat = db.get_chat(chat_id)
         try:
             link = bot.export_chat_invite_link(chat_id)
         except:
             link = '0.0.0.0/error'
-        tts += f'<a href="{link}">{chat["title"]}</a> - {chat["_id"]}\n'
+        tts += f'<a href="{link}">{chat.title}</a> - {chat.id}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 
 
 @bot.message_handler(commands=['banlist'], func=owner_lambda)
 def map_handler(m):
     tts = '🔨📃:\n'
-    for user in users.get_users():
-        if user['status'] == 'banned':
-            tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
+    for user in db.User.objects(status='banned'):
+        tts += f'{bot.form_html_userlink(user.name, user.id)}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
+
 
 @bot.message_handler(commands=['rep'], func=members_lambda)
 def map_handler(m):
     tts = '🔂📃:\n'
     i = 1
-    for user in users.get_top_reputation():
-        emoji = {members_codename: '🛂', 'owner': '👩🏻‍💼', 'guest': '👤', 'banned': '🚱'}.get(user['status'], '👤')
-        tts += f'{i}.{emoji}{user["name"]} - {user["reputation"]}\n'
-        i+=1
+    for user in db.get_top_reputation():
+        emoji = {members_codename: '🛂', 'owner': '👩🏻‍💼', 'guest': '👤', 'banned': '🚱'}.get(user.status, '👤')
+        tts += f'{i}.{emoji}{user.name} - {user.reputation}\n'
+        i += 1
     bot.respond_to(m, tts, parse_mode='HTML')
 
 
 @bot.message_handler(commands=[members_codename+'s'], func=owner_lambda)
-def map_handler(m):
+def members_handler(m):
     tts = '🛂📃:\n'
-    for user in users.get_users():
-        if user['status'] == members_codename or user['status'] == 'owner':
-            tts += f'{bot.form_html_userlink(user["name"], user["_id"])}\n'
+    for user in db.get_users():
+        if user.status == members_codename or user.status == 'owner':
+            tts += f'{bot.form_html_userlink(user.name, user.id)}\n'
     bot.respond_to(m, tts, parse_mode='HTML')
 
 
@@ -219,33 +215,16 @@ def profile_handler(m):
     user = m.from_user
     if m.reply_to_message:
         user = m.reply_to_message.from_user
-    user = users.process_user(user)
-    tts = f'👤: {user["name"]}\n'
-    tts += f'🆔: {user["_id"]}\n'
-    tts += f'📈: {user["status"]}\n'
-    tts += f'🐲: {user["reputation"]}\n'
-    n = '\n'
-    tts += f'{n.join(user["awards"])}' if user["awards"] else ''
-
-    bot.respond_to(m, tts)
+    user = db.process_tg_user(user)
+    bot.respond_to(m, user.profile())
 
 
 @bot.message_handler(commands=['owners'])
 def owners_handler(m):
     tts = ''
 
-    for owner in users.get_owners():
-        tts += f"{owner['name']}: `{owner['_id']}`\n"
-
-    bot.respond_to(m, tts, parse_mode="Markdown")
-
-
-@bot.message_handler(commands=['admins'])
-def admins_handler(m):
-    tts = ''
-
-    for admin in users.get_admins():
-        tts += f"{admin['name']}: `{admin['_id']}`\n"
+    for owner in db.get_owners():
+        tts += f"{owner.name}: `{owner.id}`\n"
 
     bot.respond_to(m, tts, parse_mode="Markdown")
 

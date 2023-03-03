@@ -1,8 +1,7 @@
 from config import *
 from telebot import TeleBot
-from db.database import Database
-from db.chats import Chats
-from db.users import Users
+
+from db import Database
 
 
 class ExtendedBot(TeleBot):
@@ -18,11 +17,7 @@ class ExtendedBot(TeleBot):
 
 
 bot = ExtendedBot(telegram_token)
+
 db = Database(mongo_url)
-users = Users(db)
-chats = Chats(db)
 
 self_id = bot.get_me().id
-
-for owner in owners:
-    users.db.update_one({'_id': owner}, {'$set': {'status': 'owner'}})

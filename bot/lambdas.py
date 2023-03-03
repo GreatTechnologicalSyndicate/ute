@@ -1,11 +1,10 @@
-from startup import bot, users, chats, self_id
+from startup import self_id, db, bot
 from config import *
 
 
 def check_ban(m):
-    user = users.process_user(m.from_user)
-    if user['status'] == 'banned':
-        return True
+    user = db.process_tg_user(m.from_user)
+    return user.banned
 
 
 def arguments_lambda(m):
@@ -41,29 +40,29 @@ def ganyba_lamda(m):
 
 
 def members_lambda(m):
-    users.process_user(m.from_user)
-    user = bot.get_chat_member(m.chat.id, m.from_user.id)
+    user = db.process_tg_user(m.from_user)
+    tg_user = bot.get_chat_member(m.chat.id, m.from_user.id)
     if owner_lambda(m):
         return True
     if user.status == members_codename:
         return True
-    if user.status == 'admin':
+    if tg_user.status == 'admin':
         return True
-    if user.status == 'creator':
+    if tg_user.status == 'creator':
         return True
     return False
 
 
 def owner_lambda(m):
-    return m.from_user.id in users.owners
+    return m.from_user.id in db.owners
 
 
 def owner_callback(c):
-    return c.from_user.id in users.owners
+    return c.from_user.id in db.owners
 
 
 def join_request_callback(c):
-    return (c.data.startswith('ja ') or c.data.startswith('jd '))
+    return c.data.startswith('ja ') or c.data.startswith('jd ')
 
 
 def butterfly(m):
@@ -71,7 +70,7 @@ def butterfly(m):
 
 
 def chat_admin_check(m):
-    users.process_user(m.from_user)
+    db.process_tg_user(m.from_user)
     user = bot.get_chat_member(m.chat.id, m.from_user.id)
     if owner_lambda(m):
         return True
@@ -83,7 +82,7 @@ def chat_admin_check(m):
 
 
 def user_check_lambda(m):
-    users.process_user(m.from_user)
+    db.process_tg_user(m.from_user)
     if chat_admin_check(m):
         return
     if check_ban(m):
@@ -94,10 +93,12 @@ def chat_check_lambda(m):
     if m.chat.type == 'private':
         return False
     if butterfly(m):
-        bot.send_message(log_channel, f'{allow_chat_command}✅`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+        print('Butterfly!')
+        bot.send_message(log_channel,
+                         f'{allow_chat_command}✅`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                          parse_mode='Markdown')
-        chats.create_chat(m.chat.id, m.chat.title)
-    if not m.chat.id in chats.chats:
+        db.create_chat(m.chat.id, m.chat.title)
+    if m.chat.id not in db.chats:
         if m.new_chat_members:
             if m.new_chat_members[0].id == self_id:
                 return False
