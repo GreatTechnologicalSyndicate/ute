@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from .lambdas import *
@@ -9,7 +10,8 @@ def chat_check_handler(m):
         bot.leave_chat(m.chat.id)
     except:
         return
-    bot.send_message(log_channel, f'{allow_chat_command}❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+    bot.send_message(log_channel,
+                     f'{allow_chat_command}❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
                      parse_mode='Markdown')
 
 
@@ -105,11 +107,13 @@ def shana_handler(m):
         bot.respond_to(m, 'Choose a human please (not yourself)')
         return
     communicator = db.process_tg_user(m.from_user)
-    time_now = int(datetime.utcnow().timestamp())
-    cooldown_time = 1000 * 60 * 60
-    time_differ = time_now - int(communicator.reputation_cooldown)
+    time_now = time.time()
+    cooldown_time = 3*60*60
+    time_differ = time_now - communicator.reputation_cooldown
     if time_differ < cooldown_time:
-        bot.respond_to(m, f"Wait for {datetime.fromtimestamp(cooldown_time - time_differ).strftime('%H:%M:%S')}")
+        hours, remainder = divmod(cooldown_time - time_differ, 3600)  # 3600 seconds in an hour
+        minutes, seconds = divmod(remainder, 60)  # 60 seconds in a minute
+        bot.respond_to(m, f"Wait for {int(hours)}:{int(minutes)}:{int(seconds)}")
         return
 
     user = db.process_tg_user(m.reply_to_message.from_user)
@@ -127,11 +131,13 @@ def ganyba_handler(m):
         bot.respond_to(m, 'Choose a human please (not yourself)')
         return
     communicator = db.process_tg_user(m.from_user)
-    time_now = int(datetime.utcnow().timestamp())
-    cooldown_time = 1000 * 60 * 60
+    time_now = time.time()
+    cooldown_time = 3 * 60 * 60
     time_differ = time_now - int(communicator.reputation_cooldown)
     if time_differ < cooldown_time:
-        bot.respond_to(m, f"Wait for {datetime.fromtimestamp(cooldown_time - time_differ).strftime('%H:%M:%S')}")
+        hours, remainder = divmod(cooldown_time - time_differ, 3600)  # 3600 seconds in an hour
+        minutes, seconds = divmod(remainder, 60)  # 60 seconds in a minute
+        bot.respond_to(m, f"Wait for {hours}:{minutes}:{seconds}")
         return
 
     user = db.process_tg_user(m.reply_to_message.from_user)
