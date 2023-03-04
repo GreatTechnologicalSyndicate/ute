@@ -137,7 +137,7 @@ def ganyba_handler(m):
     if time_differ < cooldown_time:
         hours, remainder = divmod(cooldown_time - time_differ, 3600)  # 3600 seconds in an hour
         minutes, seconds = divmod(remainder, 60)  # 60 seconds in a minute
-        bot.respond_to(m, f"Wait for {hours}:{minutes}:{seconds}")
+        bot.respond_to(m, f"Wait for {int(hours)}:{int(minutes)}:{int(seconds)}")
         return
 
     user = db.process_tg_user(m.reply_to_message.from_user)
