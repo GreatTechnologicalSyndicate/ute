@@ -62,9 +62,7 @@ async def jc_handler(c):
 
 
 @dp.message_handler()
-@for_text(global_unban_command)
-@for_status(status.OWNER)
-@reply_lambda
+@command(global_unban_command, req_status=status.OWNER, reply=True)
 async def unban_handler(m):
     user = db.process_tg_user(m.reply_to_message.from_user)
     await m.answer(f'{m.text}✅')
@@ -80,9 +78,7 @@ async def unban_handler(m):
 
 
 @dp.message_handler()
-@for_text(global_ban_command)
-@for_status(status.OWNER)
-@reply_lambda
+@command(global_ban_command, req_status=status.OWNER, reply=True)
 async def ban_handler(m):
     user = db.process_tg_user(m.reply_to_message.from_user)
     await m.answer(f'{m.text}✅')
@@ -98,9 +94,7 @@ async def ban_handler(m):
 
 
 @dp.message_handler()
-@for_text(promote_command)
-@for_status(status.OWNER)
-@reply_lambda
+@command(promote_command, req_status=status.OWNER, reply=True)
 async def promote_handler(m):
     user = db.process_tg_user(m.reply_to_message.from_user)
     user.set_status(status.OWNER)
@@ -110,8 +104,7 @@ async def promote_handler(m):
 
 
 @dp.message_handler()
-@for_text(grant_membership_command)
-@for_status(status.OWNER)
+@command(grant_membership_command, req_status=status.OWNER, reply=True)
 async def member_handler(m):
     user = db.process_tg_user(m.reply_to_message.from_user)
     user.set_status(status.MEMBER)
@@ -121,7 +114,7 @@ async def member_handler(m):
 
 
 @dp.message_handler(lambda m: shana_lamda(m) or ganyba_lamda(m))
-@for_status(status.MEMBER)
+@command(req_status=status.MEMBER)
 async def reputation_handler(m):
     if m.from_user.id == m.reply_to_message.from_user.id or m.reply_to_message.from_user.is_bot:
         await m.answer('Choose a human please (not yourself)')
@@ -146,9 +139,7 @@ async def reputation_handler(m):
 
 
 @dp.message_handler(commands=['achievement'])
-@for_status(status.OWNER)
-@arguments_lambda
-@reply_lambda
+@command(req_status=status.OWNER, reply=True, arguments=True)
 async def achievement_handler(m):
     award = m.text.split(' ', 1)[1]
     user = db.process_tg_user(m.reply_to_message.from_user)
@@ -157,8 +148,7 @@ async def achievement_handler(m):
 
 
 @dp.message_handler(commands=['global_ban'])
-@for_status(status.OWNER)
-@arguments_lambda
+@command(req_status=status.OWNER, arguments=True)
 async def global_ban_handler(m):
     user = db.get_user(int(m.text.split(' ', 1)[1]))
     user.ban()
@@ -173,7 +163,7 @@ async def global_ban_handler(m):
 
 
 @dp.message_handler(commands=['map'])
-@for_status(status.OWNER)
+@command(req_status=status.OWNER)
 async def map_handler(m):
     tts = '🗺📃:\n'
     for chat in db.get_chats():
@@ -186,7 +176,7 @@ async def map_handler(m):
 
 
 @dp.message_handler(commands=['banlist'])
-@for_status(status.OWNER)
+@command(req_status=status.OWNER)
 async def map_handler(m):
     tts = '🔨📃:\n'
     for user in db.User.objects(status=status.BANNED):
@@ -195,7 +185,7 @@ async def map_handler(m):
 
 
 @dp.message_handler(commands=['rep'])
-@for_status(status.MEMBER)
+@command(req_status=status.MEMBER)
 async def rep_handler(m):
     tts = '🔂📃:\n'
     for user, position in db.get_top_reputation():
@@ -204,7 +194,7 @@ async def rep_handler(m):
 
 
 @dp.message_handler(commands=[status.MEMBER + 's'])
-@for_status(status.OWNER)
+@command(req_status=status.OWNER)
 async def members_handler(m):
     tts = '🛂📃:\n'
     for user in db.User.objects(status=status.MEMBER):
@@ -222,7 +212,7 @@ async def profile_handler(m):
 
 
 @dp.message_handler(commands=['owners'])
-@for_status(status.OWNER)
+@command(req_status=status.OWNER)
 async def owners_handler(m):
     print('Working here!')
     tts = ''

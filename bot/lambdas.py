@@ -1,5 +1,19 @@
 from config import *
 from startup import db, bot, tbot
+from db import status
+
+
+def command(text=None, req_status=status.GUEST, reply=False, arguments=False):
+    def decorator(func):
+        wrapper = for_status(req_status)(func)
+        if text:
+            wrapper = for_text(text)(wrapper)
+        if reply:
+            wrapper = reply_lambda(wrapper)
+        if arguments:
+            wrapper = arguments_lambda(wrapper)
+        return wrapper
+    return decorator
 
 
 def for_text(text):
@@ -7,7 +21,9 @@ def for_text(text):
         async def wrapper(m):
             if m.text.lower() == text or m.text == text:
                 await func(m)
+
         return wrapper
+
     return decorator
 
 
@@ -17,8 +33,9 @@ def for_status(value):
             user = db.process_tg_user(m.from_user)
             if user.is_status(value):
                 await func(m)
-            return lambda: print('lol dont fucking say')
+
         return wrapper
+
     return decorator
 
 
@@ -28,6 +45,7 @@ def check_ban(func):
         if user:
             return lambda _: _
         await func(m)
+
     return wrapper
 
 
@@ -35,14 +53,15 @@ def arguments_lambda(func):
     async def wrapper(m):
         if m.text.count(' '):
             await func(m)
+
     return wrapper
 
 
 def reply_lambda(func):
-
     async def wrapper(m):
         if m.reply_to_message:
             await func(m)
+
     return wrapper
 
 
@@ -91,8 +110,8 @@ def chat_check_lambda(m):
         return False
     if butterfly(m) and db.process_tg_user(m.from_user).owner:
         tbot.send_message(log_channel,
-                         f'{allow_chat_command}✅`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
-                         parse_mode='Markdown')
+                          f'{allow_chat_command}✅`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                          parse_mode='Markdown')
         db.create_chat(m.chat.id, m.chat.title)
     if m.chat.id not in db.chats:
         if m.new_chat_members:
