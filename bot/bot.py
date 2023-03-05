@@ -227,7 +227,7 @@ async def owners_handler(m):
     print('Working here!')
     tts = ''
     for owner in db.get_owners():
-        tts += f"{owner.link()}`\n"
+        tts += f"{owner.name} - `{owner.id}`\n"
     await m.answer(tts, parse_mode="Markdown")
 
 
