@@ -30,12 +30,12 @@ async def chat_join_request(r):
     if user.banned:
         tts = '📬🔨❌' + info
         await bot.decline_chat_join_request(r.chat.id, user.id)
-        await bot.send_message(log_channel, tts, parse_mode='HTML', reply_markup=kb)
+        await bot.send_message(log_channel, tts,  parse_mode='HTML')
         return
     elif user.owner:
         tts = f'📬{user.emoji}✅' + info
         await bot.approve_chat_join_request(r.chat.id, user.id)
-        await bot.send_message(log_channel, tts, parse_mode='HTML', reply_markup=kb)
+        await bot.send_message(log_channel, tts, parse_mode='HTML')
         return
 
     tts = '📬💬!' + info
