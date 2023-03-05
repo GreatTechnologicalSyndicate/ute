@@ -1,64 +1,30 @@
 import time
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-from .lambdas import *
-from db import status
-from startup import dp, bot
+
 from aiogram.types import ContentType
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+from config import *
+from db import status
+from startup import dp, bot, db
+from .lambdas import command, chat_check_lambda, chat_admin_check, ganyba_lamda, shana_lamda, join_request_callback
+
+
+@dp.message_handler(content_types=ContentType.ANY)
+@command(self_admin_rights=True)
+async def user_check_handler(m):
+    user = db.process_tg_user(m.from_user)
+    if chat_admin_check(m):
+        return
+    if user.banned:
+        await bot.ban_chat_member(m.chat.id, m.from_user.id)
 
 
 @dp.message_handler(chat_check_lambda)
 async def chat_check_handler(m):
-    try:
-        await bot.leave_chat(m.chat.id)
-    except:
-        return
+    await bot.leave_chat(m.chat.id)
     await bot.send_message(log_channel,
-                           f'{allow_chat_command}❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                           f'{allow_chat_command}❌`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                            parse_mode='Markdown')
-
-
-@dp.message_handler(user_check_lambda, content_types=ContentType.ANY)
-async def user_check_handler(m):
-    pass
-
-
-@dp.chat_join_request_handler()
-async def chat_join_request(r):
-    kb = InlineKeyboardMarkup()
-    user = db.process_tg_user(r.from_user)
-    info = f'\n🗺💬: {r.chat.title}\n' + f'👤: {user.link()}'
-    if user.banned:
-        tts = '📬🔨❌' + info
-        await bot.decline_chat_join_request(r.chat.id, user.id)
-        await bot.send_message(log_channel, tts,  parse_mode='HTML')
-        return
-    elif user.owner:
-        tts = f'📬{user.emoji}✅' + info
-        await bot.approve_chat_join_request(r.chat.id, user.id)
-        await bot.send_message(log_channel, tts, parse_mode='HTML')
-        return
-
-    tts = '📬💬!' + info
-
-    kb.add(InlineKeyboardButton('✅', callback_data=f'ja {r.chat.id} {r.from_user.id}'))
-    kb.add(InlineKeyboardButton('❌', callback_data=f'jd {r.chat.id} {r.from_user.id}'))
-
-    await bot.send_message(log_channel, tts, parse_mode='HTML', reply_markup=kb)
-
-
-@dp.callback_query_handler(join_request_callback)
-async def jc_handler(c):
-    accept = True if c.data[1] == 'a' else False
-    chat_id = int(c.data.split()[1])
-    user_id = int(c.data.split()[2])
-    m = c.message
-    tts = m.text
-    if accept:
-        await bot.approve_chat_join_request(chat_id, user_id)
-        await bot.edit_message_text(f'{tts}\n✅Принято!', m.chat.id, m.message_id, parse_mode='HTML')
-    else:
-        await bot.decline_chat_join_request(chat_id, user_id)
-        await bot.edit_message_text(f'{tts}\n❌Отклонено!', m.chat.id, m.message_id, parse_mode='HTML')
 
 
 @dp.message_handler()
@@ -73,7 +39,7 @@ async def unban_handler(m):
         except:
             chat = db.get_chat(chat_id)
             await bot.send_message(log_channel, f'🔨❔ | {chat.title} | {chat.id}')
-    await bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+    await bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                            parse_mode='Markdown')
 
 
@@ -89,7 +55,7 @@ async def ban_handler(m):
         except:
             chat = db.get_chat(chat_id)
             await bot.send_message(log_channel, f'🔨❔ | {chat.title} | {chat.id}')
-    await bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+    await bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                            parse_mode='Markdown')
 
 
@@ -99,7 +65,7 @@ async def promote_handler(m):
     user = db.process_tg_user(m.reply_to_message.from_user)
     user.set_status(status.OWNER)
     await bot.send_message(log_channel,
-                           f'{m.text}✅ | `{user.id}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                           f'{m.text}✅ | `{user.id}` | `{m.chat.id}`\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                            parse_mode='Markdown')
 
 
@@ -109,7 +75,7 @@ async def member_handler(m):
     user = db.process_tg_user(m.reply_to_message.from_user)
     user.set_status(status.MEMBER)
     await bot.send_message(log_channel,
-                           f'{m.text}✅ | `{user.id}` | `{m.chat.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                           f'{m.text}✅ | `{user.id}` | `{m.chat.id}`\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                            parse_mode='Markdown')
 
 
@@ -158,7 +124,7 @@ async def global_ban_handler(m):
             await bot.ban_chat_member(chat.id, user.id)
         except:
             await bot.send_message(log_channel, f'🔨❔ | {chat.title} | {chat.id}')
-    await bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+    await bot.send_message(log_channel, f'{m.text}✅ | `{user.id}`\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                            parse_mode='Markdown')
 
 
@@ -214,7 +180,6 @@ async def profile_handler(m):
 @dp.message_handler(commands=['owners'])
 @command(req_status=status.OWNER)
 async def owners_handler(m):
-    print('Working here!')
     tts = ''
     for owner in db.get_owners():
         tts += f"{owner.name} - `{owner.id}`\n"
@@ -224,3 +189,42 @@ async def owners_handler(m):
 @dp.message_handler(commands=['start'])
 async def start_handler(m):
     await m.answer('👋')
+
+
+@dp.chat_join_request_handler()
+async def chat_join_request(r):
+    kb = InlineKeyboardMarkup()
+    user = db.process_tg_user(r.from_user)
+    info = f'\n🗺💬: {r.chat.title}\n' + f'👤: {user.link()}'
+    if user.banned:
+        tts = '📬🔨❌' + info
+        await bot.decline_chat_join_request(r.chat.id, user.id)
+        await bot.send_message(log_channel, tts, parse_mode='HTML')
+        return
+    elif user.owner:
+        tts = f'📬{user.emoji}✅' + info
+        await bot.approve_chat_join_request(r.chat.id, user.id)
+        await bot.send_message(log_channel, tts, parse_mode='HTML')
+        return
+
+    tts = '📬💬!' + info
+
+    kb.add(InlineKeyboardButton('✅', callback_data=f'ja {r.chat.id} {r.from_user.id}'))
+    kb.add(InlineKeyboardButton('❌', callback_data=f'jd {r.chat.id} {r.from_user.id}'))
+
+    await bot.send_message(log_channel, tts, parse_mode='HTML', reply_markup=kb)
+
+
+@dp.callback_query_handler(join_request_callback)
+async def jc_handler(c):
+    accept = True if c.data[1] == 'a' else False
+    chat_id = int(c.data.split()[1])
+    user_id = int(c.data.split()[2])
+    m = c.message
+    tts = m.text
+    if accept:
+        await bot.approve_chat_join_request(chat_id, user_id)
+        await bot.edit_message_text(f'{tts}\n✅Принято!', m.chat.id, m.message_id, parse_mode='HTML')
+    else:
+        await bot.decline_chat_join_request(chat_id, user_id)
+        await bot.edit_message_text(f'{tts}\n❌Отклонено!', m.chat.id, m.message_id, parse_mode='HTML')

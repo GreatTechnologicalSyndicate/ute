@@ -1,9 +1,9 @@
 from config import *
-from startup import db, bot, tbot
 from db import status
+from startup import db, bot, tbot
 
 
-def command(text=None, req_status=status.GUEST, reply=False, arguments=False):
+def command(text=None, req_status=status.GUEST, reply=False, arguments=False, self_admin_rights=False):
     def decorator(func):
         wrapper = for_status(req_status)(func)
         if text:
@@ -12,6 +12,8 @@ def command(text=None, req_status=status.GUEST, reply=False, arguments=False):
             wrapper = reply_lambda(wrapper)
         if arguments:
             wrapper = arguments_lambda(wrapper)
+        if self_admin_rights:
+            wrapper = self_admin_check(wrapper)
         return wrapper
     return decorator
 
@@ -85,6 +87,16 @@ def butterfly(m):
     return m.text == allow_chat_command
 
 
+def self_admin_check(func):
+    async def wrapper(m):
+        if tbot.get_chat_member(m.chat.id, bot.id).status == 'admin':
+            await func(m)
+        else:
+            return lambda _: tbot.send_message(log_channel, f'🔨❔ | {m.chat.title} | {m.chat.id}')
+
+    return wrapper
+
+
 def chat_admin_check(m):
     user = db.process_tg_user(m.from_user)
     tg_user = tbot.get_chat_member(m.chat.id, m.from_user.id)
@@ -97,20 +109,12 @@ def chat_admin_check(m):
     return False
 
 
-def user_check_lambda(m):
-    user = db.process_tg_user(m.from_user)
-    if chat_admin_check(m):
-        return
-    if user.banned:
-        tbot.ban_chat_member(m.chat.id, m.from_user.id)
-
-
 def chat_check_lambda(m):
     if m.chat.type == 'private':
         return False
     if butterfly(m) and db.process_tg_user(m.from_user).owner:
         tbot.send_message(log_channel,
-                          f'{allow_chat_command}✅`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_messagelink(m, "🔍🔍🔍")}',
+                          f'{allow_chat_command}✅`{m.chat.id}`|{m.chat.title}\n\n{bot.form_html_mlink(m, "🔍🔍🔍")}',
                           parse_mode='Markdown')
         db.create_chat(m.chat.id, m.chat.title)
     if m.chat.id not in db.chats:
