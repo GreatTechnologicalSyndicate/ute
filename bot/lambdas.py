@@ -1,5 +1,5 @@
-from startup import db, bot, tbot
 from config import *
+from startup import db, bot, tbot
 
 
 def for_text(text):
@@ -40,9 +40,9 @@ def arguments_lambda(func):
 
 def reply_lambda(func):
 
-    def wrapper(m):
+    async def wrapper(m):
         if m.reply_to_message:
-            func(m)
+            await func(m)
     return wrapper
 
 
